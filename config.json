@@ -1,0 +1,17 @@
+{
+  "ollama_url": "http://127.0.0.1:11434",
+  "model": "qwen3:8b",
+  "options": {
+    "num_ctx": 32768,
+    "temperature": 0.7
+  },
+  "keep_alive": -1,
+  "max_conversation_turns": 5,
+  "system_prompt_path": "initial_prompt.txt",
+  "system_rag_prompt_path": "rag_prompt.txt",
+  "service_host": "127.0.0.1",
+  "service_port": 8000,
+  "log_directory": "log",
+  "rag_kb_dir": "knowledge_base",
+  "log_file_name": "app.log"
+}

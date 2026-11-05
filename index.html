@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama FastAPI 测试前端</title>
+    <style>
+        /*body { font-family: sans-serif; line-height: 1.6; padding: 20px; }*/
+        /*#chatbox { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; margin-bottom: 10px; white-space: pre-wrap; }*/
+        /*#userInput { width: calc(100% - 80px); padding: 10px; margin-right: 5px; }*/
+        /*#sendButton { padding: 10px 15px; }*/
+        /*.user-message { color: blue; text-align: right; margin-bottom: 5px; }*/
+        /*.assistant-message { color: green; margin-bottom: 5px; }*/
+        /*.error-message { color: red; font-weight: bold; }*/
+        /*.turn-info { font-size: 0.8em; color: grey; margin-top: -5px; margin-bottom: 10px;}*/
+        /*#modeSelector { margin-bottom: 10px; }*/
+        /*.mode-label { font-weight: bold; margin-right: 8px; }*/
+        #modeSelector {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 14px auto;
+        }
+        #modeSelector label {
+            margin-left: 14px;
+            font-weight: 500;
+        }
+        .mode-label {
+            color: #3a4780;
+            font-size: 1.08rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        body {
+            font-family: "Inter", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.7;
+            background: #f6f7fb;
+            padding: 0;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #4B68F4;
+            font-weight: 700;
+            margin-top: 36px;
+            margin-bottom: 24px;
+            font-size: 2.1rem;
+            letter-spacing: 2px;
+        }
+        #chatbox {
+            background: #fff;
+            border: 1.5px solid #dde3ea;
+            border-radius: 18px;
+            padding: 18px 18px 8px 18px;
+            height: 420px;
+            max-width: 620px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 2px 12px 0 rgba(40,60,120,0.10);
+            overflow-y: scroll;
+            white-space: pre-wrap;
+            margin-bottom: 16px;
+        }
+        #userInput {
+            width: calc(100% - 110px);
+            min-height: 42px;
+            max-width: 480px;
+            font-size: 1.09rem;
+            border: 1.5px solid #dde3ea;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-right: 6px;
+            outline: none;
+            background: #fafdff;
+            transition: border-color 0.16s;
+        }
+        #userInput:focus { border-color: #4B68F4; }
+        #sendButton {
+            padding: 12px 26px;
+            background: #4B68F4;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.09rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px 0 rgba(60,80,200,0.10);
+            transition: background 0.16s, box-shadow 0.16s;
+        }
+        #sendButton:active {
+            background: #284ad2;
+            box-shadow: 0 1px 5px 0 rgba(60,80,200,0.18);
+        }
+        .user-message {
+            color: #234d83;
+            text-align: right;
+            margin-bottom: 6px;
+            background: #e8f3ff;
+            border-radius: 13px;
+            display: inline-block;
+            padding: 9px 16px;
+            max-width: 80%;
+            float: right;
+            clear: both;
+            box-shadow: 0 2px 8px 0 rgba(90,130,230,0.05);
+        }
+        .assistant-message {
+            color: #334065;
+            margin-bottom: 6px;
+            background: #f3f6ff;
+            border-radius: 13px;
+            display: inline-block;
+            padding: 9px 16px;
+            max-width: 80%;
+            float: left;
+            clear: both;
+            box-shadow: 0 2px 8px 0 rgba(80,110,230,0.06);
+        }
+        .error-message {
+            color: #fff;
+            background: #ff5050;
+            border-radius: 7px;
+            font-weight: bold;
+            padding: 8px 14px;
+            display: inline-block;
+            margin: 10px auto 7px auto;
+            box-shadow: 0 2px 8px 0 rgba(255,80,80,.13);
+        }
+        .turn-info {
+            font-size: 0.91em;
+            color: #7d89b2;
+            margin-top: -3px;
+            margin-bottom: 9px;
+            padding-left: 3px;
+            clear: both;
+        }
+        /* 输入区布局美化 */
+        #chatbox + div {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 6px;
+            max-width: 620px;
+            margin: 0 auto;
+        }
+        @media (max-width: 700px) {
+            h1 { font-size: 1.1rem; margin-top: 18px;}
+            #chatbox, #chatbox + div { max-width: 99vw; }
+            #chatbox { height: 55vw; min-height: 260px; }
+            #userInput { width: 60vw; max-width: 65vw; font-size: 1rem;}
+            #sendButton { font-size: 1rem; padding: 11px 18px;}
+        }
+    </style>
+</head>
+<body>
+    <h1>Ollama FastAPI 测试前端</h1>
+    <div id="modeSelector">
+        <span class="mode-label">对话模式:</span>
+        <label><input type="radio" name="mode" value="chat" checked> 普通Chat</label>
+        <label><input type="radio" name="mode" value="rag"> RAG Chat(知识库)</label>
+    </div>
+    <div id="chatbox"></div>
+    <div>
+        <textarea id="userInput" rows="3" placeholder="输入你的消息..."></textarea>
+        <button id="sendButton">发送</button>
+    </div>
+
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const modeSelector = document.getElementsByName('mode');
+        let mode = "chat";
+
+        let conversationHistory = []; // 普通chat历史
+
+        // 监听模式切换
+        for (const radio of modeSelector) {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    mode = this.value;
+                    chatbox.innerHTML = '';
+                    conversationHistory = [];
+                    addSystemMsg("已切换到 " + (mode === 'chat' ? '普通Chat模式' : 'RAG知识库Chat模式') + "。");
+                }
+            });
+        }
+
+        function addSystemMsg(msg) {
+            const div = document.createElement('div');
+            div.style.color = "#888";
+            div.style.fontSize = "0.95em";
+            div.textContent = msg;
+            chatbox.appendChild(div);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        function addMessageToChatbox(role, text, turnCount = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add(role === 'user' ? 'user-message' : 'assistant-message');
+            messageDiv.textContent = text;
+            chatbox.appendChild(messageDiv);
+            if (role === 'assistant' && turnCount !== null) {
+                const turnInfoDiv = document.createElement('div');
+                turnInfoDiv.classList.add('turn-info');
+                turnInfoDiv.textContent = `(轮次: ${turnCount})`;
+                chatbox.appendChild(turnInfoDiv);
+            }
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        function addErrorMessage(text) {
+            const errorDiv = document.createElement('div');
+            errorDiv.classList.add('error-message');
+            errorDiv.textContent = `错误: ${text}`;
+            chatbox.appendChild(errorDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const userText = userInput.value.trim();
+            if (!userText) return;
+
+            addMessageToChatbox('user', userText);
+            userInput.value = '';
+            sendButton.disabled = true;
+            userInput.disabled = true;
+
+            let assistantResponseDiv = document.createElement('div');
+            assistantResponseDiv.classList.add('assistant-message');
+            assistantResponseDiv.textContent = "思考中...";
+            chatbox.appendChild(assistantResponseDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            let currentAssistantMessage = "";
+            let currentTurnCount = null;
+            let assistantRoleSet = false;
+
+            if (mode === "chat") {
+                conversationHistory.push({ role: "user", content: userText });
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream'
+                    },
+                    body: JSON.stringify({ messages: conversationHistory })
+                })
+                .then(handleSSE)
+                .catch(handleFetchError);
+            } else { // RAG模式
+                fetch('/rag_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream'
+                    },
+                    body: JSON.stringify({ question: userText })
+                })
+                .then(handleSSE)
+                .catch(handleFetchError);
+            }
+
+            function handleSSE(response) {
+                if (!response.ok) {
+                    response.json().then(err => {
+                        throw new Error(`HTTP error ${response.status}: ${err.detail || response.statusText}`);
+                    }).catch(e=>{
+                        addErrorMessage("服务端响应异常。");
+                        sendButton.disabled = false;
+                        userInput.disabled = false;
+                    });
+                    return;
+                }
+                if (!response.body) {
+                    throw new Error("Response body is null");
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                function processText({ done, value }) {
+                    if (done) {
+                        if (currentAssistantMessage && mode === "chat") {
+                            conversationHistory.push({ role: "assistant", content: currentAssistantMessage });
+                        }
+                        sendButton.disabled = false;
+                        userInput.disabled = false;
+                        userInput.focus();
+                        return;
+                    }
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n\n');
+                    lines.forEach(line => {
+                        if (line.startsWith('data:')) {
+                            const jsonData = line.substring(5).trim();
+                            if (jsonData) {
+                                try {
+                                    const eventData = JSON.parse(jsonData);
+                                    if (eventData.choices && eventData.choices.length > 0) {
+                                        const delta = eventData.choices[0].delta;
+                                        const finishReason = eventData.choices[0].finish_reason;
+                                        if (delta?.role === 'assistant') {
+                                            assistantRoleSet = true;
+                                        } else if (delta?.content) {
+                                            if (!assistantRoleSet) {
+                                                assistantRoleSet = true;
+                                            }
+                                            currentAssistantMessage += delta.content;
+                                            if (assistantResponseDiv.textContent === "思考中...") {
+                                                assistantResponseDiv.textContent = delta.content;
+                                            } else {
+                                                assistantResponseDiv.textContent += delta.content;
+                                            }
+                                        }
+                                        if (eventData.usage?.turn_count !== undefined) {
+                                            currentTurnCount = eventData.usage.turn_count;
+                                        }
+                                        if (finishReason) {
+                                            if (currentTurnCount !== null && !assistantResponseDiv.nextElementSibling?.classList.contains('turn-info')) {
+                                                 const turnInfoDiv = document.createElement('div');
+                                                 turnInfoDiv.classList.add('turn-info');
+                                                 turnInfoDiv.textContent = `(轮次: ${currentTurnCount})`;
+                                                 chatbox.insertBefore(turnInfoDiv, assistantResponseDiv.nextSibling);
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error("Failed to parse SSE JSON:", jsonData, e);
+                                    addErrorMessage("无法解析来自服务器的数据块。");
+                                }
+                            }
+                        } else if (line.startsWith('event: error')) {
+                           const errorDataLine = lines.find(l => l.startsWith('data:'));
+                           if (errorDataLine) {
+                               const errorJson = errorDataLine.substring(5).trim();
+                               try {
+                                   const errorObj = JSON.parse(errorJson);
+                                   addErrorMessage(errorObj.error || "服务器流式传输时发生未知错误。");
+                               } catch (e) {
+                                    addErrorMessage("收到无法解析的服务器错误事件。");
+                               }
+                           } else {
+                               addErrorMessage("服务器流式传输时发生错误。");
+                           }
+                           sendButton.disabled = false;
+                           userInput.disabled = false;
+                           return;
+                        }
+                    });
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                    return reader.read().then(processText);
+                }
+                reader.read().then(processText);
+            }
+
+            function handleFetchError(error) {
+                console.error('Fetch Error:', error);
+                addErrorMessage(error.message || "无法连接到聊天服务或发生网络错误。");
+                if (assistantResponseDiv.textContent === "思考中...") {
+                     assistantResponseDiv.remove();
+                }
+                sendButton.disabled = false;
+                userInput.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

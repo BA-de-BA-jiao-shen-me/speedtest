@@ -1,0 +1,14 @@
+.idea/
+.vscode/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+log/
+*.log
+knowledge_base/天龙八部.txt
+# generated vector indexes (rebuilt from knowledge_base/)
+kb_index.*
+kb_index_faiss/
